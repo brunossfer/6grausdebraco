@@ -1,5 +1,5 @@
-/*g
-vetor de shorts 
+/*
+vetor de ints 
 
 cintura             pino 3  faixa 10-100, pos ini 10
 ombro               pino 11 faixa 50-140, pos ini 100
@@ -9,6 +9,9 @@ pulso giratorio     pino 5  faixa 10-150, pos ini 150
 garra               pino 13 faixa 80-150, pos ini 100
 
 velocidade delay 15 rápido, 50 normal, 100 lento
+
+Serial read
+http://forum.arduino.cc/index.php?topic=396450.0
 */
 
 
@@ -23,12 +26,12 @@ Servo pulsoSD;
 Servo pulsoG;
 Servo garra;
 
-short passo(short origem, short destino){  
+int passo(int origem, int destino){  
   return (destino - origem)/10;
   }
 
-void movimentar(short destinoCintura, short destinoOmbro, short destinoCotovelo, short destinoPulsoSD, short destinoPulsoG, short destinoGarra, char velocidade){
-  short vel;
+void movimentar(int destinoCintura, int destinoOmbro, int destinoCotovelo, int destinoPulsoSD, int destinoPulsoG, int destinoGarra, char velocidade){
+  int vel, moverCintura, moverOmbro, moverCotovelo, moverPulsoSD, moverPulsoG, moverGarra;
 
   if(velocidade == 'l')
     vel = 100;
@@ -36,16 +39,30 @@ void movimentar(short destinoCintura, short destinoOmbro, short destinoCotovelo,
     vel = 50;
   else
     vel = 15;
+
+    // se nao for mexer, o passo e 0
+    moverCintura = 0;
+    moverOmbro = 0;
+    moverCotovelo = 0;
+    moverPulsoSD = 0;
+    moverPulsoG = 0;
+    moverGarra = 0;
     
     // mover em 10 passos 
-  short moverCintura = passo(cintura.read(),destinoCintura);
-  short moverOmbro = passo(ombro.read(),destinoOmbro);
-  short moverCotovelo = passo(cotovelo.read(),destinoCotovelo);
-  short moverPulsoSD = passo(pulsoSD.read(),destinoPulsoSD); 
-  short moverPulsoG = passo(pulsoG.read(),destinoPulsoG);
-  short moverGarra = passo(garra.read(),destinoGarra);
+    if(destinoCintura != 0)
+      moverCintura = passo(cintura.read(),destinoCintura);
+    if(destinoOmbro != 0)  
+      moverOmbro = passo(ombro.read(),destinoOmbro);
+    if(destinoCotovelo != 0)
+      moverCotovelo = passo(cotovelo.read(),destinoCotovelo);
+    if(destinoPulsoSD != 0)
+      moverPulsoSD = passo(pulsoSD.read(),destinoPulsoSD); 
+    if(destinoPulsoG != 0)
+      moverPulsoG = passo(pulsoG.read(),destinoPulsoG);
+    if(destinoGarra != 0)
+      moverGarra = passo(garra.read(),destinoGarra);
   
-    for(short t = 0; t < 9; t++){
+    for(int t = 0; t < 9; t++){
         cintura.write(cintura.read() + moverCintura);
         ombro.write(ombro.read() + moverOmbro);
         cotovelo.write(cotovelo.read() + moverCotovelo);
@@ -75,23 +92,42 @@ void setup() {
   garra.attach(13);
 
 // posicoes iniciais
-  cintura.write(10);
-  ombro.write(100);
-  cotovelo.write(110);
-  pulsoSD.write(130);
-  pulsoG.write(150);
-  garra.write(100);
+//  cintura.write(10);
+//  ombro.write(100);
+//  cotovelo.write(110);
+//  pulsoSD.write(130);
+//  pulsoG.write(150);
+//  garra.write(100);
 
   Serial.begin(9600);
+  Serial.flush();
 }
 
 void loop() {  
-  // velocidades
-  delay(15);    // rapido
-  delay(50);    // normal
-  delay(100);   // lento
+  // suponho que serao enviados os 7 valores numericos em ordem, 
+  // a posicao de cintura, ombro, cotovelo, pulso, pulso e garra
+  // seguido da velocidade... suponho que vem o numero separado por espaço
+  if(Serial.available() > 0){
+    Serial.println("This is an test");
+    int destinoCintura = Serial.parseInt();
+        Serial.println(destinoCintura);
+    int destinoOmbro = Serial.parseInt();
+        Serial.println(destinoOmbro);
+    int destinoCotovelo = Serial.parseInt();
+        Serial.println(destinoCotovelo);
+    int destinoPulsoSD = Serial.parseInt();
+        Serial.println(destinoPulsoSD);
+    int destinoPulsoG = Serial.parseInt();
+        Serial.println(destinoPulsoG);
+    int destinoGarra = Serial.parseInt();
+        Serial.println(destinoGarra);
+    char velocidade = Serial.read();
+        Serial.println(velocidade);
+    Serial.flush();
 
-  if(valor recebido = 0)
-    destino = atualposicao
+    // problema: serial não pega o char e tá lendo de novo e pagando só 0
+    
+    //movimentar(destinoCintura, destinoOmbro, destinoCotovelo, destinoPulsoSD, destinoPulsoG, destinoGarra, velocidade);
+  }
 
 }
