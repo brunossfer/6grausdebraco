@@ -9,7 +9,11 @@ O braço tem 6 graus de liberdade:
 * pulso giratorio   ---  faixa 10-150, pos ini 150
 * garra             ---  faixa 80-150, pos ini 100
 
+motores devem estar ligados em portas PWM, 3,5,6,9,10,11
+
 É movimentando por um arduino uno
+
+seraQfunciona.ino é um código para testar cada motor separadamente
 
 e lá vamos nós
 
