@@ -3,15 +3,13 @@ vetor de ints
 
 cintura             pino 3    faixa 10-100, pos ini 10
 ombro               pino 5    faixa 50-140, pos ini 100
-cotovelo            pino 7    faixa 50-170, pos ini 110
+cotovelo            pino 6    faixa 50-170, pos ini 110
 pulso sobe desce    pino 9    faixa 10-150, pos ini 130
-pulso giratorio     pino 11   faixa 10-150, pos ini 150
-garra               pino 13    faixa 80-150, pos ini 100
+pulso giratorio     pino 10   faixa 10-150, pos ini 150
+garra               pino 11    faixa 80-150, pos ini 100
 
 velocidade delay 15 rápido, 50 normal, 100 lento
 
-Serial read
-http://forum.arduino.cc/index.php?topic=396450.0
 */
 
 
@@ -26,13 +24,14 @@ Servo pulsoSD;
 Servo pulsoG;
 Servo garra;
 
+char c;
 int destinoCintura = 10;
 int destinoOmbro = 100;
 int destinoCotovelo = 110;
 int destinoPulsoSD = 130;
 int destinoPulsoG = 150;
 int destinoGarra = 100;
-char velocidade = 'l';
+String comando, primeiro, segundo, terceiro, quarto, quinto, sexto, velocidade;
 
 int passo(int origem, int destino){  
   return (destino - origem)/10;
@@ -41,9 +40,9 @@ int passo(int origem, int destino){
 void movimentar(){
   int vel, moverCintura, moverOmbro, moverCotovelo, moverPulsoSD, moverPulsoG, moverGarra;
 
-  if(velocidade == 'l')
+  if(velocidade.equalsIgnoreCase("l"))
     vel = 100;
-  else if(velocidade = 'n')
+  else if(velocidade.equalsIgnoreCase("n"))
     vel = 50;
   else
     vel = 15;
@@ -88,6 +87,56 @@ void movimentar(){
     garra.write(destinoGarra);
   }
 
+/**
+ * Partindo do pressuposto que recebo no serial angulo de cada motorseguido de espaço ou virgula ou ponto e virgula seguido de char velocidade
+*/
+void processar(){
+  primeiro = comando.substring(0,comando.indexOf(' ')); // primeiro
+  comando = comando.substring(comando.indexOf(' ')+1);
+  destinoCintura = primeiro.toInt();
+  
+  segundo = comando.substring(0,comando.indexOf(' ')); // segundo
+  comando = comando.substring(comando.indexOf(' ')+1);
+  destinoOmbro = segundo.toInt();
+  
+  terceiro = comando.substring(0,comando.indexOf(' ')); // terceiro
+  comando = comando.substring(comando.indexOf(' ')+1);
+  destinoCotovelo = terceiro.toInt();
+  
+  quarto = comando.substring(0,comando.indexOf(' ')); // quarto
+  comando = comando.substring(comando.indexOf(' ')+1);
+  destinoPulsoSD = quarto.toInt();
+  
+  quinto = comando.substring(0,comando.indexOf(' ')); // quinto
+  comando = comando.substring(comando.indexOf(' ')+1);
+  destinoPulsoG = quinto.toInt();
+   
+  sexto = comando.substring(0,comando.indexOf(' ')); // sexto
+  comando = comando.substring(comando.indexOf(' ')+1);
+  destinoGarra = sexto.toInt();
+
+  velocidade = comando.substring(0,comando.indexOf(' ')); // sexto
+  
+  Serial.print("cintura = ");
+  Serial.println(primeiro);
+  Serial.print("ombro = ");
+  Serial.println(segundo);
+  Serial.print("cotovelo = ");
+  Serial.println(terceiro);
+  Serial.print("pulso sobe desce = ");
+  Serial.println(quarto);
+  Serial.print("pulso gira = ");
+  Serial.println(quinto);
+  Serial.print("garra = ");
+  Serial.println(sexto);
+  Serial.print("velocidade = ");
+  Serial.println(velocidade);
+  Serial.println();
+  Serial.println();
+  
+  movimentar();
+  }
+  
 void setup() {
   Serial.begin(9600);
   // posicoes iniciais
@@ -97,42 +146,27 @@ void setup() {
   pulsoSD.write(90);
   pulsoG.write(150);
   garra.write(100);
+  
  // associa servo aos nomes que os identificam 
   cintura.attach(3);
   ombro.attach(5);
-  cotovelo.attach(7);
+  cotovelo.attach(6);
   pulsoSD.attach(9);
-  pulsoG.attach(11);
-  garra.attach(13);
+  pulsoG.attach(10);
+  garra.attach(11);
 }
-/* observar pulsoSD, parece ter algo estranho com ele */
-//--- ate aqui ta certo---//
 
-void loop() {  
-  // suponho que serao enviados os 7 valores numericos em ordem, 
-  // a posicao de cintura, ombro, cotovelo, pulso, pulso e garra
-  // seguido da velocidade... suponho que vem o numero separado por espaço
-  if(Serial.available() > 0){
-    Serial.println("E la vamos nos");
-    destinoCintura = Serial.parseInt();
-        Serial.println(destinoCintura);
-    destinoOmbro = Serial.parseInt();
-        Serial.println(destinoOmbro);
-    destinoCotovelo = Serial.parseInt();
-        Serial.println(destinoCotovelo);
-    destinoPulsoSD = Serial.parseInt();
-        Serial.println(destinoPulsoSD);
-    destinoPulsoG = Serial.parseInt();
-        Serial.println(destinoPulsoG);
-    destinoGarra = Serial.parseInt();
-        Serial.println(destinoGarra);
-    velocidade = Serial.read();
-        Serial.println(velocidade);
-    Serial.flush();
 
-    // problema: serial não pega o char e tá lendo de novo e pegando so 0
-    
-    //movimentar(destinoCintura, destinoOmbro, destinoCotovelo, destinoPulsoSD, destinoPulsoG, destinoGarra, velocidade);
+void loop(){
+if(Serial.available() > 0){
+  c = Serial.read();
+  comando += c;
+  if(c == '\n'){
+      // acabou
+      Serial.print("recebido = ");
+      Serial.println(comando);
+      processar();
+      comando = "";
+    }
   }
-
 }
