@@ -38,7 +38,8 @@ int passo(int origem, int destino){
   }
 
 void movimentar(){
-  int vel, moverCintura, moverOmbro, moverCotovelo, moverPulsoSD, moverPulsoG, moverGarra;
+  int moverCintura, moverOmbro, moverCotovelo, moverPulsoSD, moverPulsoG, moverGarra;
+  unsigned long vel = 100;
 
   if(velocidade.equalsIgnoreCase("l"))
     vel = 100;
@@ -56,19 +57,25 @@ void movimentar(){
     moverGarra = 0;
     
     // mover em 10 passos 
-    if(destinoCintura != 0)
+    if(destinoCintura != 0){
       moverCintura = passo(cintura.read(),destinoCintura);
-    if(destinoOmbro != 0)  
+    }
+    if(destinoOmbro != 0){  
       moverOmbro = passo(ombro.read(),destinoOmbro);
-    if(destinoCotovelo != 0)
+    }
+    if(destinoCotovelo != 0){
       moverCotovelo = passo(cotovelo.read(),destinoCotovelo);
-    if(destinoPulsoSD != 0)
+    }
+    if(destinoPulsoSD != 0){
       moverPulsoSD = passo(pulsoSD.read(),destinoPulsoSD); 
-    if(destinoPulsoG != 0)
+    }
+    if(destinoPulsoG != 0){
       moverPulsoG = passo(pulsoG.read(),destinoPulsoG);
-    if(destinoGarra != 0)
+    }
+    if(destinoGarra != 0){
       moverGarra = passo(garra.read(),destinoGarra);
-  
+    }
+    
     for(int t = 0; t < 9; t++){
         cintura.write(cintura.read() + moverCintura);
         ombro.write(ombro.read() + moverOmbro);
@@ -77,18 +84,19 @@ void movimentar(){
         pulsoG.write(pulsoG.read() + moverPulsoG);
         garra.write(garra.read() + moverGarra);
         delay(vel);
+        //Serial.println("passinho do romano");
       }
    
-    cintura.write(destinoCintura);
-    ombro.write(destinoOmbro);
-    cotovelo.write(destinoCotovelo);
-    pulsoSD.write(destinoPulsoSD);
-    pulsoG.write(destinoPulsoG);
-    garra.write(destinoGarra);
+//    cintura.write(destinoCintura);
+//    ombro.write(destinoOmbro);
+//    cotovelo.write(destinoCotovelo);
+//    pulsoSD.write(destinoPulsoSD);
+//    pulsoG.write(destinoPulsoG);
+//    garra.write(destinoGarra);
   }
 
 /**
- * Partindo do pressuposto que recebo no serial angulo de cada motorseguido de espaço ou virgula ou ponto e virgula seguido de char velocidade
+ * Partindo do pressuposto que recebo no serial angulo de cada motor seguido de espaço ou virgula ou ponto e virgula seguido de char velocidade
 */
 void processar(){
   primeiro = comando.substring(0,comando.indexOf(' ')); // primeiro
@@ -136,16 +144,60 @@ void processar(){
   
   movimentar();
   }
-  
-void setup() {
-  Serial.begin(9600);
+
+void liguemSeusMotores(){
   // posicoes iniciais
+  cintura.write(10);
+  ombro.write(150);
+  cotovelo.write(50);
+  pulsoSD.write(30);
+  garra.write(100);
+  
+  delay(1000);
+  
+  cintura.write(10);
+  ombro.write(140);
+  cotovelo.write(60);
+  pulsoSD.write(50);
+  garra.write(100);
+  
+  delay(1000);
+  
+  cintura.write(10);
+  ombro.write(130);
+  cotovelo.write(70);
+  pulsoSD.write(70);
+  garra.write(100);
+
+  delay(1000);
+  
+  cintura.write(10);
+  ombro.write(120);
+  cotovelo.write(80);
+  pulsoSD.write(80);
+  garra.write(100);
+  
+  delay(1000);
+  
+  cintura.write(10);
+  ombro.write(110);
+  cotovelo.write(90);
+  pulsoSD.write(90);
+  garra.write(100);
+  
+  delay(1000);
+  
   cintura.write(10);
   ombro.write(100);
   cotovelo.write(110);
-  pulsoSD.write(90);
+  pulsoSD.write(100);
   pulsoG.write(150);
   garra.write(100);
+  
+  }
+  
+void setup() {
+  Serial.begin(9600);
   
  // associa servo aos nomes que os identificam 
   cintura.attach(3);
@@ -154,6 +206,9 @@ void setup() {
   pulsoSD.attach(9);
   pulsoG.attach(10);
   garra.attach(11);
+
+  delay(1000);
+  liguemSeusMotores();
 }
 
 
