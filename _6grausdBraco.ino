@@ -16,88 +16,15 @@ String comando, primeiro, segundo, terceiro, quarto, quinto, sexto, velocidade;
 int passo(int origem, int destino){  
   return (destino - origem)/10;
   }
-  
-/**
- * trata entrada de valor para dentro dos limites, caso receba 0, nao ha movimento
- */
-void tratar(){
-  if(destinoCintura == 0)
-      destinoCintura = cintura.read();
-  else
-      destinoCintura = constrain(destinoCintura,10,100);
-
-  if(destinoOmbro == 0)
-      destinoOmbro = ombro.read();
-  else
-      destinoOmbro = constrain(destinoOmbro,50,140);
-
-  if(destinoCotovelo == 0)
-      destinoCotovelo = cotovelo.read();
-  else
-      destinoCotovelo = constrain(destinoCotovelo,50,170);
-
-  if(destinoPulsoSD == 0)
-      destinoPulsoSD = pulsoSD.read();
-  else    
-      destinoPulsoSD = constrain(destinoPulsoSD,10,150);
-
-  if(destinoPulsoG == 0)
-      destinoPulsoG = pulsoG.read();
-  else    
-      destinoPulsoG = constrain(destinoPulsoG,10,150);
-
-  if(destinoGarra == 0)
-      destinoGarra = garra.read();
-  else   
-      destinoGarra = constrain(destinoGarra,80,140);    
-  }  
-
-/**
- * faz movimentacao dos motores utilizando os valores encontrados nas variaveis globais de destino
- */
-void movimentar(){
-  int moverCintura, moverOmbro, moverCotovelo, moverPulsoSD, moverPulsoG, moverGarra;
-
-    // se nao for mexer, veio destino 0
-    tratar();
-
-    // mover em 10 passos 
-    moverCintura = passo(cintura.read(),destinoCintura);
-    moverOmbro = passo(ombro.read(),destinoOmbro);
-    moverCotovelo = passo(cotovelo.read(),destinoCotovelo);
-    moverPulsoSD = passo(pulsoSD.read(),destinoPulsoSD);
-    moverPulsoG = passo(pulsoG.read(),destinoPulsoG);
-    moverGarra = passo(garra.read(),destinoGarra);
-    
-    for(int t = 0; t < 9; t++){
-        cintura.write(cintura.read() + moverCintura);
-        ombro.write(ombro.read() + moverOmbro);
-        cotovelo.write(cotovelo.read() + moverCotovelo);
-        pulsoSD.write(pulsoSD.read() + moverPulsoSD);
-        pulsoG.write(pulsoG.read() + moverPulsoG);
-        garra.write(garra.read() + moverGarra);
-        
-        if(velocidade.equalsIgnoreCase("r"))
-          delay(15);
-        else if(velocidade.equalsIgnoreCase("n"))
-          delay(50);
-        else
-          delay(100);
-      }
-
-    cintura.write(destinoCintura);
-    ombro.write(destinoOmbro);
-    cotovelo.write(destinoCotovelo);
-    pulsoSD.write(destinoPulsoSD);
-    pulsoG.write(destinoPulsoG);    
-    garra.write(destinoGarra);
-  }
 
 /**
  * Partindo do pressuposto que recebo no serial angulo de cada motor seguido de espaço ou virgula ou ponto e virgula seguido de char velocidade
 */
 void processar(){
-  if(comando.indexOf("inicial") >= 0){
+  if(comando.length() < 19){
+    Serial.println("comando de entrada errado");
+  }
+  else if(comando.indexOf("inicial") >= 0){
     posicaoInicial();
   }
   else{  
@@ -147,6 +74,78 @@ void processar(){
     movimentar();
   }
 }
+
+/**
+ * trata entrada de valor para dentro dos limites, caso receba 0 ou angulo invalido, nao ha movimento
+ */
+void tratar(){
+  if(destinoCintura == 0 || destinoCintura < 10 || destinoCintura > 100){
+      destinoCintura = cintura.read();
+      Serial.println("Cintura nao move, angulo invalido ou recebida ordem de nao mover");
+  }
+  if(destinoOmbro == 0 || destinoOmbro < 50 || destinoOmbro > 140){
+      destinoOmbro = ombro.read();
+      Serial.println("Ombro nao move, angulo invalido ou recebida ordem de nao mover");
+  }
+  if(destinoCotovelo == 0 || destinoCotovelo < 50 || destinoCotovelo > 170){
+      destinoCotovelo = cotovelo.read();
+      Serial.println("Cotovelo nao move, angulo invalido ou recebida ordem de nao mover");
+  }
+  if(destinoPulsoSD == 0 || destinoPulsoSD < 10 || destinoPulsoSD > 150){
+      destinoPulsoSD = pulsoSD.read();  
+      Serial.println("PulsoSD nao move, angulo invalido ou recebida ordem de nao mover");
+  }
+  if(destinoPulsoG == 0 || destinoPulsoG < 10 || destinoPulsoG > 150){
+      destinoPulsoG = pulsoG.read();
+      Serial.println("PulsoG nao move, angulo invalido ou recebida ordem de nao mover");
+  }
+  if(destinoGarra == 0 || destinoGarra < 80 || destinoGarra > 140){
+      destinoGarra = garra.read();   
+      Serial.println("Garra nao move, angulo invalido ou recebida ordem de nao mover");
+  }  
+}
+
+/**
+ * faz movimentacao dos motores utilizando os valores encontrados nas variaveis globais de destino
+ */
+void movimentar(){
+  int moverCintura, moverOmbro, moverCotovelo, moverPulsoSD, moverPulsoG, moverGarra;
+
+    // segura possiveis erros de comando
+    tratar();
+
+    // mover em 10 passos 
+    moverCintura = passo(cintura.read(),destinoCintura);
+    moverOmbro = passo(ombro.read(),destinoOmbro);
+    moverCotovelo = passo(cotovelo.read(),destinoCotovelo);
+    moverPulsoSD = passo(pulsoSD.read(),destinoPulsoSD);
+    moverPulsoG = passo(pulsoG.read(),destinoPulsoG);
+    moverGarra = passo(garra.read(),destinoGarra);
+    
+    for(int t = 0; t < 9; t++){
+        cintura.write(cintura.read() + moverCintura);
+        ombro.write(ombro.read() + moverOmbro);
+        cotovelo.write(cotovelo.read() + moverCotovelo);
+        pulsoSD.write(pulsoSD.read() + moverPulsoSD);
+        pulsoG.write(pulsoG.read() + moverPulsoG);
+        garra.write(garra.read() + moverGarra);
+        
+        if(velocidade.equalsIgnoreCase("r"))
+          delay(15);
+        else if(velocidade.equalsIgnoreCase("n"))
+          delay(50);
+        else
+          delay(100);
+      }
+
+    cintura.write(destinoCintura);
+    ombro.write(destinoOmbro);
+    cotovelo.write(destinoCotovelo);
+    pulsoSD.write(destinoPulsoSD);
+    pulsoG.write(destinoPulsoG);    
+    garra.write(destinoGarra);
+  }
+
 
 /**
  * da valores de posicao inicial 'as variaveis globais
