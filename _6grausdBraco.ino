@@ -1,18 +1,3 @@
-/*
-vetor de ints 
-
-cintura             pino 3    faixa 10-100, pos ini 10
-ombro               pino 5    faixa 50-140, pos ini 100
-cotovelo            pino 6    faixa 50-170, pos ini 110
-pulso sobe desce    pino 9    faixa 10-150, pos ini 130
-pulso giratorio     pino 10   faixa 10-150, pos ini 150
-garra               pino 11    faixa 80-150, pos ini 100
-
-velocidade delay 15 rápido, 50 normal, 100 lento
-
-*/
-
-
 // bib de servos
 #include <Servo.h>
 
@@ -25,56 +10,64 @@ Servo pulsoG;
 Servo garra;
 
 char c;
-int destinoCintura = 10;
-int destinoOmbro = 100;
-int destinoCotovelo = 110;
-int destinoPulsoSD = 130;
-int destinoPulsoG = 150;
-int destinoGarra = 100;
+int destinoCintura, destinoOmbro, destinoCotovelo, destinoPulsoSD, destinoPulsoG, destinoGarra;
 String comando, primeiro, segundo, terceiro, quarto, quinto, sexto, velocidade;
 
 int passo(int origem, int destino){  
   return (destino - origem)/10;
   }
+  
+/**
+ * trata entrada de valor para dentro dos limites, caso receba 0, nao ha movimento
+ */
+void tratar(){
+  if(destinoCintura == 0)
+      destinoCintura = cintura.read();
+  else
+      destinoCintura = constrain(destinoCintura,10,100);
 
+  if(destinoOmbro == 0)
+      destinoOmbro = ombro.read();
+  else
+      destinoOmbro = constrain(destinoOmbro,50,140);
+
+  if(destinoCotovelo == 0)
+      destinoCotovelo = cotovelo.read();
+  else
+      destinoCotovelo = constrain(destinoCotovelo,50,170);
+
+  if(destinoPulsoSD == 0)
+      destinoPulsoSD = pulsoSD.read();
+  else    
+      destinoPulsoSD = constrain(destinoPulsoSD,10,150);
+
+  if(destinoPulsoG == 0)
+      destinoPulsoG = pulsoG.read();
+  else    
+      destinoPulsoG = constrain(destinoPulsoG,10,150);
+
+  if(destinoGarra == 0)
+      destinoGarra = garra.read();
+  else   
+      destinoGarra = constrain(destinoGarra,80,140);    
+  }  
+
+/**
+ * faz movimentacao dos motores utilizando os valores encontrados nas variaveis globais de destino
+ */
 void movimentar(){
   int moverCintura, moverOmbro, moverCotovelo, moverPulsoSD, moverPulsoG, moverGarra;
-  unsigned long vel = 100;
 
-  if(velocidade.equalsIgnoreCase("l"))
-    vel = 100;
-  else if(velocidade.equalsIgnoreCase("n"))
-    vel = 50;
-  else
-    vel = 15;
+    // se nao for mexer, veio destino 0
+    tratar();
 
-    // se nao for mexer, o passo e 0
-    moverCintura = 0;
-    moverOmbro = 0;
-    moverCotovelo = 0;
-    moverPulsoSD = 0;
-    moverPulsoG = 0;
-    moverGarra = 0;
-    
     // mover em 10 passos 
-    if(destinoCintura != 0){
-      moverCintura = passo(cintura.read(),destinoCintura);
-    }
-    if(destinoOmbro != 0){  
-      moverOmbro = passo(ombro.read(),destinoOmbro);
-    }
-    if(destinoCotovelo != 0){
-      moverCotovelo = passo(cotovelo.read(),destinoCotovelo);
-    }
-    if(destinoPulsoSD != 0){
-      moverPulsoSD = passo(pulsoSD.read(),destinoPulsoSD); 
-    }
-    if(destinoPulsoG != 0){
-      moverPulsoG = passo(pulsoG.read(),destinoPulsoG);
-    }
-    if(destinoGarra != 0){
-      moverGarra = passo(garra.read(),destinoGarra);
-    }
+    moverCintura = passo(cintura.read(),destinoCintura);
+    moverOmbro = passo(ombro.read(),destinoOmbro);
+    moverCotovelo = passo(cotovelo.read(),destinoCotovelo);
+    moverPulsoSD = passo(pulsoSD.read(),destinoPulsoSD);
+    moverPulsoG = passo(pulsoG.read(),destinoPulsoG);
+    moverGarra = passo(garra.read(),destinoGarra);
     
     for(int t = 0; t < 9; t++){
         cintura.write(cintura.read() + moverCintura);
@@ -83,134 +76,106 @@ void movimentar(){
         pulsoSD.write(pulsoSD.read() + moverPulsoSD);
         pulsoG.write(pulsoG.read() + moverPulsoG);
         garra.write(garra.read() + moverGarra);
-        delay(vel);
-        //Serial.println("passinho do romano");
+        
+        if(velocidade.equalsIgnoreCase("r"))
+          delay(15);
+        else if(velocidade.equalsIgnoreCase("n"))
+          delay(50);
+        else
+          delay(100);
       }
-   
-//    cintura.write(destinoCintura);
-//    ombro.write(destinoOmbro);
-//    cotovelo.write(destinoCotovelo);
-//    pulsoSD.write(destinoPulsoSD);
-//    pulsoG.write(destinoPulsoG);
-//    garra.write(destinoGarra);
+
+    cintura.write(destinoCintura);
+    ombro.write(destinoOmbro);
+    cotovelo.write(destinoCotovelo);
+    pulsoSD.write(destinoPulsoSD);
+    pulsoG.write(destinoPulsoG);    
+    garra.write(destinoGarra);
   }
 
 /**
  * Partindo do pressuposto que recebo no serial angulo de cada motor seguido de espaço ou virgula ou ponto e virgula seguido de char velocidade
 */
 void processar(){
-  primeiro = comando.substring(0,comando.indexOf(' ')); // primeiro
-  comando = comando.substring(comando.indexOf(' ')+1);
-  destinoCintura = primeiro.toInt();
-  
-  segundo = comando.substring(0,comando.indexOf(' ')); // segundo
-  comando = comando.substring(comando.indexOf(' ')+1);
-  destinoOmbro = segundo.toInt();
-  
-  terceiro = comando.substring(0,comando.indexOf(' ')); // terceiro
-  comando = comando.substring(comando.indexOf(' ')+1);
-  destinoCotovelo = terceiro.toInt();
-  
-  quarto = comando.substring(0,comando.indexOf(' ')); // quarto
-  comando = comando.substring(comando.indexOf(' ')+1);
-  destinoPulsoSD = quarto.toInt();
-  
-  quinto = comando.substring(0,comando.indexOf(' ')); // quinto
-  comando = comando.substring(comando.indexOf(' ')+1);
-  destinoPulsoG = quinto.toInt();
-   
-  sexto = comando.substring(0,comando.indexOf(' ')); // sexto
-  comando = comando.substring(comando.indexOf(' ')+1);
-  destinoGarra = sexto.toInt();
-
-  velocidade = comando.substring(0,comando.indexOf(' ')); // sexto
-  
-  Serial.print("cintura = ");
-  Serial.println(primeiro);
-  Serial.print("ombro = ");
-  Serial.println(segundo);
-  Serial.print("cotovelo = ");
-  Serial.println(terceiro);
-  Serial.print("pulso sobe desce = ");
-  Serial.println(quarto);
-  Serial.print("pulso gira = ");
-  Serial.println(quinto);
-  Serial.print("garra = ");
-  Serial.println(sexto);
-  Serial.print("velocidade = ");
-  Serial.println(velocidade);
-  Serial.println();
-  Serial.println();
-  
-  movimentar();
+  if(comando.indexOf("inicial") >= 0){
+    posicaoInicial();
   }
-
-void liguemSeusMotores(){
-  // posicoes iniciais
-  cintura.write(10);
-  ombro.write(150);
-  cotovelo.write(50);
-  pulsoSD.write(30);
-  garra.write(100);
+  else{  
+    primeiro = comando.substring(0,comando.indexOf(' ')); // primeiro
+    comando = comando.substring(comando.indexOf(' ')+1);
+    destinoCintura = primeiro.toInt();
+    
+    segundo = comando.substring(0,comando.indexOf(' ')); // segundo
+    comando = comando.substring(comando.indexOf(' ')+1);
+    destinoOmbro = segundo.toInt();
+    
+    terceiro = comando.substring(0,comando.indexOf(' ')); // terceiro
+    comando = comando.substring(comando.indexOf(' ')+1);
+    destinoCotovelo = terceiro.toInt();
+    
+    quarto = comando.substring(0,comando.indexOf(' ')); // quarto
+    comando = comando.substring(comando.indexOf(' ')+1);
+    destinoPulsoSD = quarto.toInt();
+    
+    quinto = comando.substring(0,comando.indexOf(' ')); // quinto
+    comando = comando.substring(comando.indexOf(' ')+1);
+    destinoPulsoG = quinto.toInt();
+     
+    sexto = comando.substring(0,comando.indexOf(' ')); // sexto
+    comando = comando.substring(comando.indexOf(' ')+1);
+    destinoGarra = sexto.toInt();
   
-  delay(1000);
-  
-  cintura.write(10);
-  ombro.write(140);
-  cotovelo.write(60);
-  pulsoSD.write(50);
-  garra.write(100);
-  
-  delay(1000);
-  
-  cintura.write(10);
-  ombro.write(130);
-  cotovelo.write(70);
-  pulsoSD.write(70);
-  garra.write(100);
-
-  delay(1000);
-  
-  cintura.write(10);
-  ombro.write(120);
-  cotovelo.write(80);
-  pulsoSD.write(80);
-  garra.write(100);
-  
-  delay(1000);
-  
-  cintura.write(10);
-  ombro.write(110);
-  cotovelo.write(90);
-  pulsoSD.write(90);
-  garra.write(100);
-  
-  delay(1000);
-  
-  cintura.write(10);
-  ombro.write(100);
-  cotovelo.write(110);
-  pulsoSD.write(100);
-  pulsoG.write(150);
-  garra.write(100);
-  
+    velocidade = comando.substring(0,comando.indexOf(' ')); // sexto
+    
+    Serial.print("cintura = ");
+    Serial.println(primeiro);
+    Serial.print("ombro = ");
+    Serial.println(segundo);
+    Serial.print("cotovelo = ");
+    Serial.println(terceiro);
+    Serial.print("pulso sobe desce = ");
+    Serial.println(quarto);
+    Serial.print("pulso gira = ");
+    Serial.println(quinto);
+    Serial.print("garra = ");
+    Serial.println(sexto);
+    Serial.print("velocidade = ");
+    Serial.println(velocidade);
+    Serial.println();
+    Serial.println();
+    
+    movimentar();
   }
-  
-void setup() {
-  Serial.begin(9600);
-  
- // associa servo aos nomes que os identificam 
-  cintura.attach(3);
-  ombro.attach(5);
-  cotovelo.attach(6);
-  pulsoSD.attach(9);
-  pulsoG.attach(10);
-  garra.attach(11);
-
-  delay(1000);
-  liguemSeusMotores();
 }
 
+/**
+ * da valores de posicao inicial 'as variaveis globais
+ */
+void posicaoInicial(){
+// pos ini 10 100 110 130 150 100 n
+    destinoCintura = 10;
+    destinoOmbro = 100;
+    destinoCotovelo = 110;
+    destinoPulsoSD = 130;
+    destinoPulsoG = 150;
+    destinoGarra = 100;
+    velocidade = "l";
+    movimentar();
+}
+  
+void setup() {
+  Serial.begin(9600); 
+ // associa servo aos nomes que os identificam 
+  cintura.attach(3);      //cintura             pino 3    faixa 10-100, pos ini 10
+  ombro.attach(5);        //ombro               pino 5    faixa 50-140, pos ini 100
+  cotovelo.attach(6);     //cotovelo            pino 6    faixa 50-170, pos ini 110
+  pulsoSD.attach(9);      //pulso sobe desce    pino 9    faixa 10-150, pos ini 130
+  pulsoG.attach(10);      //pulso giratorio     pino 10   faixa 10-150, pos ini 150
+  garra.attach(11);       //garra               pino 11    faixa 80-140, pos ini 100
+
+  delay(1000);
+  posicaoInicial();
+}
 
 void loop(){
 if(Serial.available() > 0){
