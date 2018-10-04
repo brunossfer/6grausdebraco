@@ -1,5 +1,9 @@
 // bib de servos
 #include <Servo.h>
+#include <SoftwareSerial.h>
+
+#define RX 7
+#define TX 8
 
 // criar os objetos servos
 Servo cintura; 
@@ -8,6 +12,7 @@ Servo cotovelo;
 Servo pulsoSD;
 Servo pulsoG;
 Servo garra;
+//SoftwareSerial bluetooth(RX,TX);
 
 char c;
 int destinoCintura, destinoOmbro, destinoCotovelo, destinoPulsoSD, destinoPulsoG, destinoGarra;
@@ -21,12 +26,12 @@ int passo(int origem, int destino){
  * Partindo do pressuposto que recebo no serial angulo de cada motor seguido de espaço ou virgula ou ponto e virgula seguido de char velocidade
 */
 void processar(){
-  if(comando.length() < 19){
-    Serial.println("comando de entrada errado");
-  }
-  else if(comando.indexOf("inicial") >= 0){
+  if(comando.indexOf("inicial") >= 0){
     posicaoInicial();
   }
+  else if(comando.length() < 19){
+    Serial.println("comando de entrada errado");
+  } 
   else{  
     primeiro = comando.substring(0,comando.indexOf(' ')); // primeiro
     comando = comando.substring(comando.indexOf(' ')+1);
