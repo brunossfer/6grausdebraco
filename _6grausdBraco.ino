@@ -12,7 +12,7 @@ Servo cotovelo;
 Servo pulsoSD;
 Servo pulsoG;
 Servo garra;
-//SoftwareSerial bluetooth(RX,TX);
+SoftwareSerial bluetooth(RX,TX);
 
 char c;
 int destinoCintura, destinoOmbro, destinoCotovelo, destinoPulsoSD, destinoPulsoG, destinoGarra;
@@ -100,11 +100,11 @@ void tratar(){
       destinoPulsoSD = pulsoSD.read();  
       Serial.println("PulsoSD nao move, angulo invalido ou recebida ordem de nao mover");
   }
-  if(destinoPulsoG == 0 || destinoPulsoG < 10 || destinoPulsoG > 150){
+  if(destinoPulsoG == 0 || destinoPulsoG < 10 || destinoPulsoG > 151){
       destinoPulsoG = pulsoG.read();
       Serial.println("PulsoG nao move, angulo invalido ou recebida ordem de nao mover");
   }
-  if(destinoGarra == 0 || destinoGarra < 80 || destinoGarra > 140){
+  if(destinoGarra == 0 || destinoGarra < 80 || destinoGarra > 150){
       destinoGarra = garra.read();   
       Serial.println("Garra nao move, angulo invalido ou recebida ordem de nao mover");
   }  
@@ -169,6 +169,8 @@ void posicaoInicial(){
   
 void setup() {
   Serial.begin(9600); 
+  bluetooth.begin(9600);
+  
  // associa servo aos nomes que os identificam 
   cintura.attach(3);      //cintura             pino 3    faixa 10-100, pos ini 10
   ombro.attach(5);        //ombro               pino 5    faixa 50-140, pos ini 100
@@ -180,17 +182,31 @@ void setup() {
   delay(1000);
   posicaoInicial();
 }
-
+char saco[7];
 void loop(){
-if(Serial.available() > 0){
-  c = Serial.read();
+if(bluetooth.available() > 0){
+  c = bluetooth.read();
   comando += c;
-  if(c == '\n'){
+  if(c == '\n'|| c == 'f'){
       // acabou
       Serial.print("recebido = ");
       Serial.println(comando);
+      comando.toCharArray(saco,7);
+      bluetooth.write(saco);
       processar();
+      delay(10000);
       comando = "";
     }
   }
+  if(Serial.available()){
+    delay(10); // The DELAY! ********** VERY IMPORTANT *******
+    bluetooth.write(Serial.read());
+  }
 }
+/*
+pegar copo: 
+inicial
+10 130 70 130 150 100 n
+10 130 70 130 150 145 n 
+10 100 110 130 150 145 n
+*/
