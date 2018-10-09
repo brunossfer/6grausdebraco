@@ -180,11 +180,10 @@ void loop() {
   digitalWrite(LED_BUILTIN, LOW);
   if (bluetooth.available() > 0) {
     entrada = bluetooth.read();
-    if (entrada != '\n') { // se estiver recebendo bytes... ha de dar certo
+    // se estiver recebendo bytes... ha de dar certo
       data[pos] = entrada;
       pos++;
-    }
-    else { // finalizou
+    if(pos == 6){ // finalizou
       processar();
     }
   }
