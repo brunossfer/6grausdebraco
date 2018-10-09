@@ -14,70 +14,60 @@ Servo pulsoG;
 Servo garra;
 SoftwareSerial bluetooth(RX,TX);
 
-char c;
-int destinoCintura, destinoOmbro, destinoCotovelo, destinoPulsoSD, destinoPulsoG, destinoGarra;
-String comando, primeiro, segundo, terceiro, quarto, quinto, sexto, velocidade;
+int entrada, pos, destinoCintura, destinoOmbro, destinoCotovelo, destinoPulsoSD, destinoPulsoG, destinoGarra, velocidade;
+int data[10];
 
 int passo(int origem, int destino){  
   return (destino - origem)/10;
   }
 
 /**
- * Partindo do pressuposto que recebo no serial angulo de cada motor seguido de espaço ou virgula ou ponto e virgula seguido de char velocidade
+   Partindo do pressuposto que recebo no serial angulo de cada motor seguido de espaço ou virgula ou ponto e virgula seguido de char velocidade
 */
-void processar(){
-  if(comando.indexOf("inicial") >= 0){
-    posicaoInicial();
-  }
-  else if(comando.length() < 19){
-    Serial.println("comando de entrada errado");
-  } 
-  else{  
-    primeiro = comando.substring(0,comando.indexOf(' ')); // primeiro
-    comando = comando.substring(comando.indexOf(' ')+1);
-    destinoCintura = primeiro.toInt();
-    
-    segundo = comando.substring(0,comando.indexOf(' ')); // segundo
-    comando = comando.substring(comando.indexOf(' ')+1);
-    destinoOmbro = segundo.toInt();
-    
-    terceiro = comando.substring(0,comando.indexOf(' ')); // terceiro
-    comando = comando.substring(comando.indexOf(' ')+1);
-    destinoCotovelo = terceiro.toInt();
-    
-    quarto = comando.substring(0,comando.indexOf(' ')); // quarto
-    comando = comando.substring(comando.indexOf(' ')+1);
-    destinoPulsoSD = quarto.toInt();
-    
-    quinto = comando.substring(0,comando.indexOf(' ')); // quinto
-    comando = comando.substring(comando.indexOf(' ')+1);
-    destinoPulsoG = quinto.toInt();
-     
-    sexto = comando.substring(0,comando.indexOf(' ')); // sexto
-    comando = comando.substring(comando.indexOf(' ')+1);
-    destinoGarra = sexto.toInt();
-  
-    velocidade = comando.substring(0,comando.indexOf(' ')); // sexto
-    
-    Serial.print("cintura = ");
-    Serial.println(primeiro);
-    Serial.print("ombro = ");
-    Serial.println(segundo);
-    Serial.print("cotovelo = ");
-    Serial.println(terceiro);
-    Serial.print("pulso sobe desce = ");
-    Serial.println(quarto);
-    Serial.print("pulso gira = ");
-    Serial.println(quinto);
-    Serial.print("garra = ");
-    Serial.println(sexto);
-    Serial.print("velocidade = ");
-    Serial.println(velocidade);
-    Serial.println();
-    Serial.println();
-    
-    movimentar();
-  }
+void processar() {
+  digitalWrite(LED_BUILTIN, HIGH);
+  destinoCintura = data[0];
+  destinoOmbro = data[1];
+  destinoCotovelo = data[2];
+  destinoPulsoSD = data[3];
+  destinoPulsoG = data[4];
+  destinoGarra = data[5];
+  velocidade = data[6];
+
+  Serial.print("cintura = ");
+  Serial.println(data[0]);
+  bluetooth.println(data[0]);
+
+  Serial.print("ombro = ");
+  Serial.println(data[1]);
+  bluetooth.println(data[1]);
+
+  Serial.print("cotovelo = ");
+  Serial.println(data[2]);
+  bluetooth.println(data[2]);
+
+  Serial.print("pulso sobe desce = ");
+  Serial.println(data[3]);
+  bluetooth.println(data[3]);
+
+  Serial.print("pulso gira = ");
+  Serial.println(data[4]);
+  bluetooth.println(data[4]);
+
+  Serial.print("garra = ");
+  Serial.println(data[5]);
+  bluetooth.println(data[5]);
+
+  Serial.print("velocidade = ");
+  Serial.println(data[6]);
+  bluetooth.println(data[6]);
+
+  Serial.println();
+  Serial.println();
+
+
+  movimentar();
+  pos = 0;
 }
 
 /**
@@ -168,10 +158,13 @@ void posicaoInicial(){
 }
   
 void setup() {
-  Serial.begin(9600); 
   bluetooth.begin(9600);
-  
- // associa servo aos nomes que os identificam 
+  Serial.begin(9600);
+
+  pinMode(LED_BUILTIN, OUTPUT);
+  digitalWrite(LED_BUILTIN, LOW);
+
+  // associa servo aos nomes que os identificam
   cintura.attach(3);      //cintura             pino 3    faixa 10-100, pos ini 10
   ombro.attach(5);        //ombro               pino 5    faixa 50-140, pos ini 100
   cotovelo.attach(6);     //cotovelo            pino 6    faixa 50-170, pos ini 110
@@ -182,25 +175,18 @@ void setup() {
   delay(1000);
   posicaoInicial();
 }
-char saco[7];
-void loop(){
-if(bluetooth.available() > 0){
-  c = bluetooth.read();
-  comando += c;
-  if(c == '\n'|| c == 'f'){
-      // acabou
-      Serial.print("recebido = ");
-      Serial.println(comando);
-      comando.toCharArray(saco,7);
-      bluetooth.write(saco);
-      processar();
-      delay(10000);
-      comando = "";
+
+void loop() {
+  digitalWrite(LED_BUILTIN, LOW);
+  if (bluetooth.available() > 0) {
+    entrada = bluetooth.read();
+    if (entrada != '\n') { // se estiver recebendo bytes... ha de dar certo
+      data[pos] = entrada;
+      pos++;
     }
-  }
-  if(Serial.available()){
-    delay(10); // The DELAY! ********** VERY IMPORTANT *******
-    bluetooth.write(Serial.read());
+    else { // finalizou
+      processar();
+    }
   }
 }
 /*
