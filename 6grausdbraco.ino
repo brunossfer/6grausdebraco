@@ -1,7 +1,9 @@
 // bib de servos
 #include <Servo.h>
 #include <SoftwareSerial.h>
+#include <Wire.h>
 
+#define SLAVE_ADDRESS 0x04
 #define RX 7
 #define TX 8
 
@@ -12,72 +14,100 @@ Servo cotovelo;
 Servo pulsoSD;
 Servo pulsoG;
 Servo garra;
-//SoftwareSerial bluetooth(RX,TX);
+SoftwareSerial bluetooth(RX,TX);
 
-char c;
-int destinoCintura, destinoOmbro, destinoCotovelo, destinoPulsoSD, destinoPulsoG, destinoGarra;
-String comando, primeiro, segundo, terceiro, quarto, quinto, sexto, velocidade;
+//dados do raspberry
+int data[70];
+int pos = 0;
+bool flag = false;
+int response;
+
+int destinoCintura, destinoOmbro, destinoCotovelo, destinoPulsoSD, destinoPulsoG, destinoGarra, velocidade;
 
 int passo(int origem, int destino){  
   return (destino - origem)/10;
   }
 
 /**
- * Partindo do pressuposto que recebo no serial angulo de cada motor seguido de espaço ou virgula ou ponto e virgula seguido de char velocidade
+   processa dados recebidos do bluetooth
+*/
+void processarBT() {
+  digitalWrite(LED_BUILTIN, HIGH);
+  destinoCintura = data[0];
+  destinoOmbro = data[1];
+  destinoCotovelo = data[2];
+  destinoPulsoSD = data[3];
+  destinoPulsoG = data[4];
+  destinoGarra = data[5];
+  velocidade = data[6];
+
+  Serial.print("cintura = ");
+  Serial.println(data[0]);
+  bluetooth.println(data[0]);
+
+  Serial.print("ombro = ");
+  Serial.println(data[1]);
+  bluetooth.println(data[1]);
+
+  Serial.print("cotovelo = ");
+  Serial.println(data[2]);
+  bluetooth.println(data[2]);
+
+  Serial.print("pulso sobe desce = ");
+  Serial.println(data[3]);
+  bluetooth.println(data[3]);
+
+  Serial.print("pulso gira = ");
+  Serial.println(data[4]);
+  bluetooth.println(data[4]);
+
+  Serial.print("garra = ");
+  Serial.println(data[5]);
+  bluetooth.println(data[5]);
+
+  Serial.print("velocidade = ");
+  Serial.println(data[6]);
+  bluetooth.println(data[6]);
+
+  Serial.println();
+  Serial.println();
+
+  movimentar();
+  pos = 0;
+}
+
+/**
+ * processa dados recebidos do raspberrie
 */
 void processar(){
-  if(comando.indexOf("inicial") >= 0){
-    posicaoInicial();
-  }
-  else if(comando.length() < 19){
-    Serial.println("comando de entrada errado");
-  } 
-  else{  
-    primeiro = comando.substring(0,comando.indexOf(' ')); // primeiro
-    comando = comando.substring(comando.indexOf(' ')+1);
-    destinoCintura = primeiro.toInt();
+  destinoCintura = data[0];
+  destinoOmbro = data[1];
+  destinoCotovelo = data[2];
+  destinoPulsoSD = data[3];
+  destinoPulsoG = data[4];
+  destinoGarra = data[5];  
+  velocidade = data[6];
     
-    segundo = comando.substring(0,comando.indexOf(' ')); // segundo
-    comando = comando.substring(comando.indexOf(' ')+1);
-    destinoOmbro = segundo.toInt();
+  Serial.print("cintura = ");
+  Serial.println(data[0]);
+  Serial.print("ombro = ");
+  Serial.println(data[1]);
+  Serial.print("cotovelo = ");
+  Serial.println(data[2]);
+  Serial.print("pulso sobe desce = ");
+  Serial.println(data[3]);
+  Serial.print("pulso gira = ");
+  Serial.println(data[4]);
+  Serial.print("garra = ");
+  Serial.println(data[5]);
+  Serial.print("velocidade = ");
+  Serial.println(data[6]);
+  Serial.println();
+  Serial.println();
     
-    terceiro = comando.substring(0,comando.indexOf(' ')); // terceiro
-    comando = comando.substring(comando.indexOf(' ')+1);
-    destinoCotovelo = terceiro.toInt();
-    
-    quarto = comando.substring(0,comando.indexOf(' ')); // quarto
-    comando = comando.substring(comando.indexOf(' ')+1);
-    destinoPulsoSD = quarto.toInt();
-    
-    quinto = comando.substring(0,comando.indexOf(' ')); // quinto
-    comando = comando.substring(comando.indexOf(' ')+1);
-    destinoPulsoG = quinto.toInt();
-     
-    sexto = comando.substring(0,comando.indexOf(' ')); // sexto
-    comando = comando.substring(comando.indexOf(' ')+1);
-    destinoGarra = sexto.toInt();
-  
-    velocidade = comando.substring(0,comando.indexOf(' ')); // sexto
-    
-    Serial.print("cintura = ");
-    Serial.println(primeiro);
-    Serial.print("ombro = ");
-    Serial.println(segundo);
-    Serial.print("cotovelo = ");
-    Serial.println(terceiro);
-    Serial.print("pulso sobe desce = ");
-    Serial.println(quarto);
-    Serial.print("pulso gira = ");
-    Serial.println(quinto);
-    Serial.print("garra = ");
-    Serial.println(sexto);
-    Serial.print("velocidade = ");
-    Serial.println(velocidade);
-    Serial.println();
-    Serial.println();
-    
-    movimentar();
-  }
+  movimentar();
+  flag = false;
+  pos = 0;
 }
 
 /**
@@ -100,11 +130,11 @@ void tratar(){
       destinoPulsoSD = pulsoSD.read();  
       Serial.println("PulsoSD nao move, angulo invalido ou recebida ordem de nao mover");
   }
-  if(destinoPulsoG == 0 || destinoPulsoG < 10 || destinoPulsoG > 150){
+  if(destinoPulsoG == 0 || destinoPulsoG < 10 || destinoPulsoG > 151){
       destinoPulsoG = pulsoG.read();
       Serial.println("PulsoG nao move, angulo invalido ou recebida ordem de nao mover");
   }
-  if(destinoGarra == 0 || destinoGarra < 80 || destinoGarra > 140){
+  if(destinoGarra == 0 || destinoGarra < 80 || destinoGarra > 150){
       destinoGarra = garra.read();   
       Serial.println("Garra nao move, angulo invalido ou recebida ordem de nao mover");
   }  
@@ -115,18 +145,15 @@ void tratar(){
  */
 void movimentar(){
   int moverCintura, moverOmbro, moverCotovelo, moverPulsoSD, moverPulsoG, moverGarra;
-
     // segura possiveis erros de comando
     tratar();
-
     // mover em 10 passos 
     moverCintura = passo(cintura.read(),destinoCintura);
     moverOmbro = passo(ombro.read(),destinoOmbro);
     moverCotovelo = passo(cotovelo.read(),destinoCotovelo);
     moverPulsoSD = passo(pulsoSD.read(),destinoPulsoSD);
     moverPulsoG = passo(pulsoG.read(),destinoPulsoG);
-    moverGarra = passo(garra.read(),destinoGarra);
-    
+    moverGarra = passo(garra.read(),destinoGarra);   
     for(int t = 0; t < 9; t++){
         cintura.write(cintura.read() + moverCintura);
         ombro.write(ombro.read() + moverOmbro);
@@ -135,9 +162,9 @@ void movimentar(){
         pulsoG.write(pulsoG.read() + moverPulsoG);
         garra.write(garra.read() + moverGarra);
         
-        if(velocidade.equalsIgnoreCase("r"))
+        if(velocidade == 2)
           delay(15);
-        else if(velocidade.equalsIgnoreCase("n"))
+        else if(velocidade == 1)
           delay(50);
         else
           delay(100);
@@ -151,7 +178,6 @@ void movimentar(){
     garra.write(destinoGarra);
   }
 
-
 /**
  * da valores de posicao inicial 'as variaveis globais
  */
@@ -163,13 +189,47 @@ void posicaoInicial(){
     destinoPulsoSD = 130;
     destinoPulsoG = 150;
     destinoGarra = 100;
-    velocidade = "l";
+    velocidade = 0;
     movimentar();
 }
-  
+
+/**
+ * Metodo para receber requisicao do raspberry
+ */
+void receiveData(int byteCount) {
+  while (Wire.available()) {
+    data[pos] = Wire.read();
+    if (data[pos] != 255){
+      pos++;
+    }
+    else{
+      flag = true;
+    }      
+  }
+}
+
+/**
+ * Metodo para enviar dados do raspberry
+ */
+void sendData() {
+  Wire.write(response);
+}
+
+/**
+ * Inicializacao das variaveis
+ */ 
 void setup() {
-  Serial.begin(9600); 
- // associa servo aos nomes que os identificam 
+  bluetooth.begin(9600);
+  Serial.begin(9600);
+  Wire.begin(SLAVE_ADDRESS);
+  
+  Wire.onReceive(receiveData);
+  Wire.onRequest(sendData);
+  
+  pinMode(LED_BUILTIN, OUTPUT);
+  digitalWrite(LED_BUILTIN, LOW);
+
+  // associa servo aos nomes que os identificam
   cintura.attach(3);      //cintura             pino 3    faixa 10-100, pos ini 10
   ombro.attach(5);        //ombro               pino 5    faixa 50-140, pos ini 100
   cotovelo.attach(6);     //cotovelo            pino 6    faixa 50-170, pos ini 110
@@ -181,16 +241,26 @@ void setup() {
   posicaoInicial();
 }
 
-void loop(){
-if(Serial.available() > 0){
-  c = Serial.read();
-  comando += c;
-  if(c == '\n'){
-      // acabou
-      Serial.print("recebido = ");
-      Serial.println(comando);
-      processar();
-      comando = "";
+void loop() {
+  digitalWrite(LED_BUILTIN, LOW);
+  // raspberrie
+  if(flag == true){
+    processar();
+  }
+  //bluetooth
+  if (bluetooth.available() > 0) {
+    data[pos] = bluetooth.read();
+    pos++;
+    if(pos == 7){ // finalizou
+      Serial.print("Recebido: ");
+      Serial.println(data[0]);
+      Serial.println(data[1]);
+      Serial.println(data[2]);
+      Serial.println(data[3]);
+      Serial.println(data[4]);
+      Serial.println(data[5]);
+      Serial.println(data[6]);
+      processarBT();
     }
   }
 }
