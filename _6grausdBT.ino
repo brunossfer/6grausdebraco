@@ -15,7 +15,7 @@ Servo garra;
 SoftwareSerial bluetooth(RX,TX);
 
 int entrada, pos, destinoCintura, destinoOmbro, destinoCotovelo, destinoPulsoSD, destinoPulsoG, destinoGarra, velocidade;
-int data[10];
+int data[7];
 
 int passo(int origem, int destino){  
   return (destino - origem)/10;
@@ -125,9 +125,9 @@ void movimentar(){
         pulsoG.write(pulsoG.read() + moverPulsoG);
         garra.write(garra.read() + moverGarra);
         
-        if(velocidade.equalsIgnoreCase("r"))
+        if(velocidade == 2)
           delay(15);
-        else if(velocidade.equalsIgnoreCase("n"))
+        else if(velocidade == 1)
           delay(50);
         else
           delay(100);
@@ -153,7 +153,7 @@ void posicaoInicial(){
     destinoPulsoSD = 130;
     destinoPulsoG = 150;
     destinoGarra = 100;
-    velocidade = "l";
+    velocidade = 0;
     movimentar();
 }
   
@@ -183,7 +183,15 @@ void loop() {
     // se estiver recebendo bytes... ha de dar certo
       data[pos] = entrada;
       pos++;
-    if(pos == 6){ // finalizou
+    if(pos == 7){ // finalizou
+      Serial.print("Recebido: ");
+      Serial.println(data[0]);
+      Serial.println(data[1]);
+      Serial.println(data[2]);
+      Serial.println(data[3]);
+      Serial.println(data[4]);
+      Serial.println(data[5]);
+      Serial.println(data[6]);
       processar();
     }
   }
